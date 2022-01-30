@@ -13,6 +13,7 @@
 #include <iostream>
 #include <iterator>
 #include <cctype>
+#include <climits>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
@@ -24,7 +25,9 @@
 #include <archive_entry.h>	// Recursive search inside ZIP files
 #include <archive.h>		// Ditto
 
+#ifdef USE_LIBXML
 #include <libxml/HTMLparser.h> // HTML parsing (TODO: XML)
+#endif
 
 struct zzt_header {
 	int16_t magic;
@@ -527,6 +530,7 @@ std::string data_interest_binary_text(const std::string & body_text,
 
 // HTML
 
+#ifdef USE_LIBXML
 // Recursively check all text elements (NOTE: Not links or other tag elements.
 // This is part of the spec!)
 
@@ -587,6 +591,7 @@ std::string data_interest_html(const std::vector<char> & contents_bytes) {
 
 	return interest_type;
 }
+#endif
 
 // Lightly adapted from libarchive's simple archive reading example.
 // TODO: Handle internal paths more gracefully (yuck). Also TODO: Handle corrupted
@@ -855,12 +860,14 @@ std::vector<interest_data> data_interest_type(const std::string & file_path,
 		return {};
 	}
 
+#ifdef USE_LIBXML
 	// TODO: XML?
 	if (str_contains(mime_type, "html")) {
 		std::string possible_interest = data_interest_html(contents_bytes);
 		if (possible_interest != "") {
 			return { interest_data(PRI_KEYWORD, possible_interest)}; }
 	}
+#endif
 
 	// Stringify the contents so we can search it with data_interest_text.
 	// TODO: make the latter work directly on the vectors.
